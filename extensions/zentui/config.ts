@@ -24,6 +24,7 @@ const MIN_PROJECT_REFRESH_INTERVAL_MS = 5_000;
 
 export type PolishedTuiConfig = {
 	projectRefreshIntervalMs: number;
+	editorExtraText?: string;
 	icons: {
 		cwd: string;
 		git: string;
@@ -61,6 +62,7 @@ export type PolishedTuiConfig = {
 		editorThinkingMedium?: ColorSpec;
 		editorThinkingHigh?: ColorSpec;
 		editorThinkingXhigh?: ColorSpec;
+		editorExtra?: ColorSpec;
 	};
 	colorSources: ColorSourcesConfig;
 	extensionStatuses: ExtensionStatusesConfig;
@@ -203,6 +205,7 @@ function normalizeColors(record: Record<string, unknown>): Partial<PolishedTuiCo
 		editorThinkingMedium: colorValue(record, "editorThinkingMedium"),
 		editorThinkingHigh: colorValue(record, "editorThinkingHigh"),
 		editorThinkingXhigh: colorValue(record, "editorThinkingXhigh"),
+		editorExtra: colorValue(record, "editorExtra"),
 	});
 }
 
@@ -283,6 +286,7 @@ export function mergeConfig(parsed: unknown): PolishedTuiConfig {
 		: defaultConfig.extensionStatuses;
 	return {
 		projectRefreshIntervalMs: parseProjectRefreshIntervalMs(config.projectRefreshIntervalMs),
+		editorExtraText: stringValue(config, "editorExtraText"),
 		icons: {
 			...defaultConfig.icons,
 			...icons,

@@ -1,4 +1,6 @@
-import { CustomEditor, type KeybindingsManager, type Theme } from "@earendil-works/pi-coding-agent";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { CustomEditor, getAgentDir, type KeybindingsManager, type Theme } from "@earendil-works/pi-coding-agent";
 import {
 	type Component,
 	type EditorTheme,
@@ -27,6 +29,28 @@ type EditorMeta = {
 function clampRenderedLines(lines: string[], width: number): string[] {
 	const maxWidth = Math.max(0, width);
 	return lines.map((line) => truncateToWidth(line, maxWidth, ""));
+}
+
+function readCodexWeeklyLimit(): string | undefined {
+	try {
+		const path = join(getAgentDir(), "usage-tracker-rate-limits.json");
+		if (!existsSync(path)) return undefined;
+		const parsed = JSON.parse(readFileSync(path, "utf8"));
+		const windows = parsed?.providers?.openai?.windows;
+		if (!Array.isArray(windows)) return undefined;
+		const weekly = windows.find(
+			(window) =>
+				typeof window?.label === "string" &&
+				window.label.includes("Codex") &&
+				window.label.includes("1w") &&
+				!window.label.includes("Spark"),
+		);
+		if (!weekly || typeof weekly.percentLeft !== "number") return undefined;
+		const reset = typeof weekly.resetDescription === "string" ? ` ${weekly.resetDescription}` : "";
+		return `Codex ${Math.round(weekly.percentLeft)}%${reset}`;
+	} catch {
+		return undefined;
+	}
 }
 
 export class PolishedEditor extends CustomEditor {
@@ -133,6 +157,19 @@ export class PolishedEditor extends CustomEditor {
 			.filter(Boolean)
 			.join(safeThemeFg(this.uiTheme, "borderMuted", "  "));
 		const metaParts = [modelMeta];
+		const extraText =
+			process.env.PI_ZENTUI_EDITOR_EXTRA_TEXT ?? config.editorExtraText ?? readCodexWeeklyLimit();
+		if (extraText) {
+			metaParts.push(
+				renderStyleForSourceOrFallback(
+					this.uiTheme,
+					colorSource,
+					config.colors.editorExtra,
+					"muted",
+					extraText,
+				),
+			);
+		}
 		const thinkingLevel = this.getThinkingLevel();
 		if (thinkingLevel && thinkingLevel !== "off") {
 			metaParts.push(

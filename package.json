@@ -32,7 +32,7 @@
 		"@earendil-works/pi-tui": "*"
 	},
 	"pi": {
-		"extensions": ["./extensions"],
+		"extensions": ["./extensions/zentui/index.ts"],
 		"image": "https://raw.githubusercontent.com/lmilojevicc/pi-zentui/main/assets/zentui.png"
 	},
 	"publishConfig": {

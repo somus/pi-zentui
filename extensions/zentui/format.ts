@@ -2,6 +2,11 @@ import type { AssistantMessage } from "@earendil-works/pi-ai";
 import type { ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 import type { ColorSource, ColorSpec } from "./config";
 import type { RuntimeInfo } from "./runtime";
+
+declare global {
+	// eslint-disable-next-line no-var
+	var piZentuiContextLabel: string | undefined;
+}
 import { renderStyleForSource } from "./style";
 
 export type UsageTotals = {
@@ -64,6 +69,9 @@ export function buildCostLabel(totals: UsageTotals): string {
 }
 
 export function buildContextLabel(ctx: ExtensionContext): string {
+	const custom = globalThis.piZentuiContextLabel;
+	if (typeof custom === "string" && custom.length > 0) return custom;
+
 	const usage = ctx.getContextUsage();
 	const contextWindow = ctx.model?.contextWindow ?? usage?.contextWindow;
 

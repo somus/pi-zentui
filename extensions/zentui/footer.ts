@@ -6,6 +6,11 @@ import { formatCwdLabel, formatRuntimeSegment } from "./format";
 import type { FooterState } from "./state";
 import { renderStyleForSource } from "./style";
 
+declare global {
+	// eslint-disable-next-line no-var
+	var piZentuiContextLabel: string | undefined;
+}
+
 function joinStatusTexts(statusTexts: string[], separator: string): string {
 	return statusTexts.filter(Boolean).join(separator);
 }
@@ -209,8 +214,13 @@ export function installFooter(
 				);
 
 				const left = [cwdLabel, branchLabel, runtimeLabel].filter(Boolean).join(" ");
+				const contextLabel =
+					typeof globalThis.piZentuiContextLabel === "string" &&
+					globalThis.piZentuiContextLabel.length > 0
+						? globalThis.piZentuiContextLabel
+						: state.contextLabel;
 				const right = [
-					renderStyleForSource(theme, colorSource, contextColor, state.contextLabel),
+					renderStyleForSource(theme, colorSource, contextColor, contextLabel),
 					renderStyleForSource(theme, colorSource, config.colors.tokens, state.tokenLabel),
 					renderStyleForSource(theme, colorSource, config.colors.cost, state.costLabel),
 				].join(separator);

@@ -159,17 +159,15 @@ export class PolishedEditor extends CustomEditor {
 		const metaParts = [modelMeta];
 		const extraText =
 			process.env.PI_ZENTUI_EDITOR_EXTRA_TEXT ?? config.editorExtraText ?? readCodexWeeklyLimit();
-		if (extraText) {
-			metaParts.push(
-				renderStyleForSourceOrFallback(
+		const extraMeta = extraText
+			? renderStyleForSourceOrFallback(
 					this.uiTheme,
 					colorSource,
 					config.colors.editorExtra,
 					"muted",
 					extraText,
-				),
-			);
-		}
+				)
+			: undefined;
 		const thinkingLevel = this.getThinkingLevel();
 		if (thinkingLevel && thinkingLevel !== "off") {
 			metaParts.push(
@@ -182,7 +180,10 @@ export class PolishedEditor extends CustomEditor {
 				),
 			);
 		}
-		const meta = metaParts.filter(Boolean).join(safeThemeFg(this.uiTheme, "border", "  "));
+		const leftMeta = metaParts.filter(Boolean).join(safeThemeFg(this.uiTheme, "border", "  "));
+		const meta = extraMeta
+			? `${leftMeta}${" ".repeat(Math.max(2, innerWidth - visibleWidth(leftMeta) - visibleWidth(extraMeta)))}${extraMeta}`
+			: leftMeta;
 
 		const rail = `${renderStyleForSourceOrFallback(
 			this.uiTheme,

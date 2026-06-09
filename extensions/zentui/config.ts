@@ -19,6 +19,11 @@ export type ExtensionStatusesConfig = {
 	placements: Record<string, ExtensionStatusPlacement>;
 };
 
+export type IntegrationSlotsConfig = {
+	contextLabel: boolean;
+	editorRight: boolean;
+};
+
 const DEFAULT_PROJECT_REFRESH_INTERVAL_MS = 30_000;
 const MIN_PROJECT_REFRESH_INTERVAL_MS = 5_000;
 
@@ -66,6 +71,7 @@ export type PolishedTuiConfig = {
 	};
 	colorSources: ColorSourcesConfig;
 	extensionStatuses: ExtensionStatusesConfig;
+	integrationSlots: IntegrationSlotsConfig;
 };
 
 export const configPath = join(getAgentDir(), "zentui.json");
@@ -108,6 +114,10 @@ export const defaultConfig: PolishedTuiConfig = {
 	extensionStatuses: {
 		defaultPlacement: "right",
 		placements: {},
+	},
+	integrationSlots: {
+		contextLabel: true,
+		editorRight: true,
 	},
 };
 
@@ -221,6 +231,17 @@ export function isExtensionStatusPlacement(value: unknown): value is ExtensionSt
 	return value === "off" || value === "left" || value === "middle" || value === "right";
 }
 
+function booleanValue(record: Record<string, unknown>, key: keyof IntegrationSlotsConfig): boolean {
+	return typeof record[key] === "boolean" ? record[key] : defaultConfig.integrationSlots[key];
+}
+
+function normalizeIntegrationSlots(record: Record<string, unknown>): IntegrationSlotsConfig {
+	return {
+		contextLabel: booleanValue(record, "contextLabel"),
+		editorRight: booleanValue(record, "editorRight"),
+	};
+}
+
 function normalizeExtensionStatuses(record: Record<string, unknown>): ExtensionStatusesConfig {
 	const defaultPlacement = isExtensionStatusPlacement(record.defaultPlacement)
 		? record.defaultPlacement
@@ -284,6 +305,9 @@ export function mergeConfig(parsed: unknown): PolishedTuiConfig {
 	const extensionStatuses = isRecord(config.extensionStatuses)
 		? normalizeExtensionStatuses(config.extensionStatuses as Record<string, unknown>)
 		: defaultConfig.extensionStatuses;
+	const integrationSlots = isRecord(config.integrationSlots)
+		? normalizeIntegrationSlots(config.integrationSlots as Record<string, unknown>)
+		: defaultConfig.integrationSlots;
 	return {
 		projectRefreshIntervalMs: parseProjectRefreshIntervalMs(config.projectRefreshIntervalMs),
 		editorExtraText: stringValue(config, "editorExtraText"),
@@ -300,6 +324,7 @@ export function mergeConfig(parsed: unknown): PolishedTuiConfig {
 			defaultPlacement: extensionStatuses.defaultPlacement,
 			placements: { ...extensionStatuses.placements },
 		},
+		integrationSlots: { ...integrationSlots },
 	};
 }
 

@@ -7,6 +7,7 @@ import {
 	visibleWidth,
 } from "@earendil-works/pi-tui";
 import type { PolishedTuiConfig } from "./config";
+import { getZentuiSlot } from "./integrations";
 import {
 	EDITOR_ACCENT_FALLBACK,
 	EDITOR_BORDER_FALLBACK,
@@ -27,16 +28,6 @@ type EditorMeta = {
 function clampRenderedLines(lines: string[], width: number): string[] {
 	const maxWidth = Math.max(0, width);
 	return lines.map((line) => truncateToWidth(line, maxWidth, ""));
-}
-
-function readEditorExtraText(): string | undefined {
-	const value = globalThis.piZentuiEditorExtraText;
-	return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-declare global {
-	// eslint-disable-next-line no-var
-	var piZentuiEditorExtraText: string | undefined;
 }
 
 export class PolishedEditor extends CustomEditor {
@@ -143,7 +134,10 @@ export class PolishedEditor extends CustomEditor {
 			.filter(Boolean)
 			.join(safeThemeFg(this.uiTheme, "borderMuted", "  "));
 		const metaParts = [modelMeta];
-		const extraText = process.env.PI_ZENTUI_EDITOR_EXTRA_TEXT ?? config.editorExtraText ?? readEditorExtraText();
+		const extraText =
+			process.env.PI_ZENTUI_EDITOR_EXTRA_TEXT ??
+			config.editorExtraText ??
+			(config.integrationSlots.editorRight ? getZentuiSlot("editorRight") : undefined);
 		const extraMeta = extraText
 			? renderStyleForSourceOrFallback(
 					this.uiTheme,

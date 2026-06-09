@@ -137,7 +137,7 @@ export class PolishedEditor extends CustomEditor {
 		const extraText =
 			process.env.PI_ZENTUI_EDITOR_EXTRA_TEXT ??
 			config.editorExtraText ??
-			(config.integrationSlots.editorRight ? getZentuiSlot("editorRight") : undefined);
+			(config.integrationSlots.editorRight ? getZentuiSlot("editorRight", config) : undefined);
 		const extraMeta = extraText
 			? renderStyleForSourceOrFallback(
 					this.uiTheme,

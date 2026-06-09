@@ -8,11 +8,13 @@ import type { EditorTheme, TUI } from "@earendil-works/pi-tui";
 import {
 	type ColorSourcesConfig,
 	type ExtensionStatusPlacement,
+	type IntegrationWidgetPlacement,
 	type PolishedTuiConfig,
 	ensureConfigExists,
 	loadConfig,
 	saveColorSourcesPatch,
 	saveExtensionStatusPlacement,
+	saveIntegrationWidgetPlacement,
 } from "./config";
 import { installFooter } from "./footer";
 import { emptyGitStatus, readGitStatus } from "./git";
@@ -161,6 +163,9 @@ export default function (pi: ExtensionAPI) {
 		},
 		setExtensionStatusPlacement(key: string, placement: ExtensionStatusPlacement) {
 			currentConfig = saveExtensionStatusPlacement(key, placement);
+		},
+		setIntegrationWidgetPlacement(key: string, placement: IntegrationWidgetPlacement) {
+			currentConfig = saveIntegrationWidgetPlacement(key, placement);
 		},
 		requestRender() {
 			refresh();

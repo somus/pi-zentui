@@ -1,6 +1,12 @@
-export type ZentuiIntegrationSlot = "contextLabel" | "editorRight";
+import type { IntegrationWidgetPlacement, PolishedTuiConfig } from "./config";
 
-export type ZentuiIntegrationRegistry = Partial<Record<ZentuiIntegrationSlot, string>>;
+export type ZentuiIntegrationSlot = Exclude<IntegrationWidgetPlacement, "off">;
+
+export type ZentuiIntegrationRegistry = {
+	widgets?: Record<string, string | undefined>;
+	contextLabel?: string;
+	editorRight?: string;
+};
 
 declare global {
 	// eslint-disable-next-line no-var
@@ -12,7 +18,24 @@ declare global {
 	var piZentuiEditorExtraText: string | undefined;
 }
 
-export function getZentuiSlot(slot: ZentuiIntegrationSlot): string | undefined {
+export function getActiveZentuiIntegrations(): ReadonlyMap<string, string> {
+	return new Map(
+		Object.entries(globalThis.piZentui?.widgets ?? {}).filter(
+			(entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0,
+		),
+	);
+}
+
+export function getZentuiSlot(
+	slot: ZentuiIntegrationSlot,
+	config?: PolishedTuiConfig,
+): string | undefined {
+	if (config) {
+		for (const [key, value] of getActiveZentuiIntegrations()) {
+			if (config.integrationWidgets.placements[key] === slot) return value;
+		}
+	}
+
 	const value = globalThis.piZentui?.[slot];
 	if (typeof value === "string" && value.length > 0) return value;
 

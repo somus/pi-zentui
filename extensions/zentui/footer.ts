@@ -211,7 +211,7 @@ export function installFooter(
 
 				const left = [cwdLabel, branchLabel, runtimeLabel].filter(Boolean).join(" ");
 				const contextLabel =
-					(config.integrationSlots.contextLabel ? getZentuiSlot("contextLabel") : undefined) ??
+					(config.integrationSlots.contextLabel ? getZentuiSlot("contextLabel", config) : undefined) ??
 					state.contextLabel;
 				const right = [
 					renderStyleForSource(theme, colorSource, contextColor, contextLabel),

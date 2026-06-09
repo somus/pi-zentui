@@ -24,6 +24,12 @@ export type IntegrationSlotsConfig = {
 	editorRight: boolean;
 };
 
+export type IntegrationWidgetPlacement = "off" | "contextLabel" | "editorRight";
+
+export type IntegrationWidgetsConfig = {
+	placements: Record<string, IntegrationWidgetPlacement>;
+};
+
 const DEFAULT_PROJECT_REFRESH_INTERVAL_MS = 30_000;
 const MIN_PROJECT_REFRESH_INTERVAL_MS = 5_000;
 
@@ -72,6 +78,7 @@ export type PolishedTuiConfig = {
 	colorSources: ColorSourcesConfig;
 	extensionStatuses: ExtensionStatusesConfig;
 	integrationSlots: IntegrationSlotsConfig;
+	integrationWidgets: IntegrationWidgetsConfig;
 };
 
 export const configPath = join(getAgentDir(), "zentui.json");
@@ -118,6 +125,9 @@ export const defaultConfig: PolishedTuiConfig = {
 	integrationSlots: {
 		contextLabel: true,
 		editorRight: true,
+	},
+	integrationWidgets: {
+		placements: {},
 	},
 };
 
@@ -242,6 +252,23 @@ function normalizeIntegrationSlots(record: Record<string, unknown>): Integration
 	};
 }
 
+export function isIntegrationWidgetPlacement(value: unknown): value is IntegrationWidgetPlacement {
+	return value === "off" || value === "contextLabel" || value === "editorRight";
+}
+
+function normalizeIntegrationWidgets(record: Record<string, unknown>): IntegrationWidgetsConfig {
+	const placements = isRecord(record.placements)
+		? Object.fromEntries(
+				Object.entries(record.placements).filter(
+					(entry): entry is [string, IntegrationWidgetPlacement] =>
+						isIntegrationWidgetPlacement(entry[1]),
+				),
+			)
+		: {};
+
+	return { placements };
+}
+
 function normalizeExtensionStatuses(record: Record<string, unknown>): ExtensionStatusesConfig {
 	const defaultPlacement = isExtensionStatusPlacement(record.defaultPlacement)
 		? record.defaultPlacement
@@ -308,6 +335,9 @@ export function mergeConfig(parsed: unknown): PolishedTuiConfig {
 	const integrationSlots = isRecord(config.integrationSlots)
 		? normalizeIntegrationSlots(config.integrationSlots as Record<string, unknown>)
 		: defaultConfig.integrationSlots;
+	const integrationWidgets = isRecord(config.integrationWidgets)
+		? normalizeIntegrationWidgets(config.integrationWidgets as Record<string, unknown>)
+		: defaultConfig.integrationWidgets;
 	return {
 		projectRefreshIntervalMs: parseProjectRefreshIntervalMs(config.projectRefreshIntervalMs),
 		editorExtraText: stringValue(config, "editorExtraText"),
@@ -325,6 +355,9 @@ export function mergeConfig(parsed: unknown): PolishedTuiConfig {
 			placements: { ...extensionStatuses.placements },
 		},
 		integrationSlots: { ...integrationSlots },
+		integrationWidgets: {
+			placements: { ...integrationWidgets.placements },
+		},
 	};
 }
 
@@ -333,6 +366,13 @@ export function getExtensionStatusPlacement(
 	key: string,
 ): ExtensionStatusPlacement {
 	return config.extensionStatuses.placements[key] ?? config.extensionStatuses.defaultPlacement;
+}
+
+export function getIntegrationWidgetPlacement(
+	config: PolishedTuiConfig,
+	key: string,
+): IntegrationWidgetPlacement {
+	return config.integrationWidgets.placements[key] ?? "off";
 }
 
 export function loadConfig(): PolishedTuiConfig {
@@ -360,17 +400,17 @@ export function saveColorSourcesPatch(
 	return mergeConfig(record);
 }
 
-export function saveExtensionStatusPlacement(
+function savePlacementRecord(
+	record: ConfigRecord,
+	section: "extensionStatuses" | "integrationWidgets",
 	key: string,
-	placement: ExtensionStatusPlacement,
-	path = configPath,
-): PolishedTuiConfig {
-	const record = readConfigRecord(path);
-	const existingExtensionStatuses = isRecord(record.extensionStatuses)
-		? { ...(record.extensionStatuses as Record<string, unknown>) }
+	placement: string,
+): void {
+	const existingSection = isRecord(record[section])
+		? { ...(record[section] as Record<string, unknown>) }
 		: {};
-	const existingPlacements = isRecord(existingExtensionStatuses.placements)
-		? { ...(existingExtensionStatuses.placements as Record<string, unknown>) }
+	const existingPlacements = isRecord(existingSection.placements)
+		? { ...(existingSection.placements as Record<string, unknown>) }
 		: {};
 
 	Object.defineProperty(existingPlacements, key, {
@@ -380,10 +420,30 @@ export function saveExtensionStatusPlacement(
 		writable: true,
 	});
 
-	record.extensionStatuses = {
-		...existingExtensionStatuses,
+	record[section] = {
+		...existingSection,
 		placements: existingPlacements,
 	};
+}
+
+export function saveExtensionStatusPlacement(
+	key: string,
+	placement: ExtensionStatusPlacement,
+	path = configPath,
+): PolishedTuiConfig {
+	const record = readConfigRecord(path);
+	savePlacementRecord(record, "extensionStatuses", key, placement);
+	writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`, "utf8");
+	return mergeConfig(record);
+}
+
+export function saveIntegrationWidgetPlacement(
+	key: string,
+	placement: IntegrationWidgetPlacement,
+	path = configPath,
+): PolishedTuiConfig {
+	const record = readConfigRecord(path);
+	savePlacementRecord(record, "integrationWidgets", key, placement);
 	writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`, "utf8");
 	return mergeConfig(record);
 }

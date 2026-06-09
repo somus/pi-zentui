@@ -10,10 +10,14 @@ import {
 	type ColorSource,
 	type ColorSourcesConfig,
 	type ExtensionStatusPlacement,
+	type IntegrationWidgetPlacement,
 	type PolishedTuiConfig,
 	getExtensionStatusPlacement,
+	getIntegrationWidgetPlacement,
 	isExtensionStatusPlacement,
+	isIntegrationWidgetPlacement,
 } from "./config";
+import { getActiveZentuiIntegrations } from "./integrations";
 import { sanitizeExtensionStatusText } from "./extension-status";
 import { EDITOR_BORDER_STYLE, renderChromeBorder, safeThemeFg } from "./style";
 
@@ -24,6 +28,11 @@ const extensionStatusPlacementValues: ExtensionStatusPlacement[] = [
 	"middle",
 	"right",
 ];
+const integrationWidgetPlacementValues: IntegrationWidgetPlacement[] = [
+	"off",
+	"contextLabel",
+	"editorRight",
+];
 
 type SettingId = "starship" | "editorMessages";
 
@@ -32,6 +41,7 @@ type SettingsCommandDeps = {
 	setColorSources: (patch: Partial<ColorSourcesConfig>) => void;
 	getActiveExtensionStatuses: () => ReadonlyMap<string, string>;
 	setExtensionStatusPlacement: (key: string, placement: ExtensionStatusPlacement) => void;
+	setIntegrationWidgetPlacement?: (key: string, placement: IntegrationWidgetPlacement) => void;
 	requestRender: () => void;
 	settingsListTheme?: SettingsListTheme;
 };
@@ -69,7 +79,9 @@ function patchForSetting(id: SettingId, value: ColorSource): Partial<ColorSource
 function buildItems(
 	config: PolishedTuiConfig,
 	activeStatusCount: number,
+	activeIntegrationCount: number,
 	thirdPartyStatusesSubmenu: SettingItem["submenu"],
+	integrationWidgetsSubmenu: SettingItem["submenu"],
 ): SettingItem[] {
 	return [
 		...(Object.keys(settingLabels) as SettingId[]).map((key) => ({
@@ -86,6 +98,14 @@ function buildItems(
 				"Configure active ctx.ui.setStatus() footer statuses. Only currently active keys are listed.",
 			currentValue: `${activeStatusCount} active`,
 			submenu: thirdPartyStatusesSubmenu,
+		},
+		{
+			id: "integrationWidgets",
+			label: "Integration widgets",
+			description:
+				"Configure active globalThis.piZentui.widgets entries, like context meter or editor-right metadata.",
+			currentValue: `${activeIntegrationCount} active`,
+			submenu: integrationWidgetsSubmenu,
 		},
 	];
 }
@@ -166,11 +186,78 @@ export function registerZentuiSettingsCommand(pi: ExtensionAPI, deps: SettingsCo
 					);
 					return statusSettingsList;
 				};
+				const makeIntegrationWidgetsSubmenu: SettingItem["submenu"] = (_currentValue, close) => {
+					const activeIntegrations = Array.from(getActiveZentuiIntegrations().entries()).sort(
+						([a], [b]) => (a < b ? -1 : a > b ? 1 : 0),
+					);
+
+					if (activeIntegrations.length === 0) {
+						return {
+							render(width: number) {
+								return [
+									truncateToWidth(safeThemeFg(theme, "accent", "Integration widgets"), width, ""),
+									"",
+									truncateToWidth(
+										safeThemeFg(theme, "muted", "No Zentui integration widgets are active."),
+										width,
+										"",
+									),
+									truncateToWidth(
+										safeThemeFg(
+											theme,
+											"muted",
+											"This menu lists widgets currently published through globalThis.piZentui.widgets.",
+										),
+										width,
+										"",
+									),
+									"",
+									truncateToWidth(safeThemeFg(theme, "muted", "Esc to go back"), width, ""),
+								];
+							},
+							invalidate() {},
+							handleInput(data: string) {
+								if (data === "\x1b" || data === "\u0003") close(undefined);
+							},
+						};
+					}
+
+					const integrationItems: SettingItem[] = activeIntegrations.map(([key, value]) => ({
+						id: key,
+						label: key,
+						description: `Current value: ${value}`,
+						currentValue: getIntegrationWidgetPlacement(deps.getConfig(), key),
+						values: integrationWidgetPlacementValues,
+					}));
+					const integrationSettingsList = new SettingsList(
+						integrationItems,
+						8,
+						settingsListTheme,
+						(key, newValue) => {
+							if (!isIntegrationWidgetPlacement(newValue)) return;
+
+							try {
+								deps.setIntegrationWidgetPlacement?.(key, newValue);
+								integrationSettingsList.updateValue(key, newValue);
+								deps.requestRender();
+								ctx.ui.notify(`Integration widget ${key}: ${newValue}`, "info");
+								tui.requestRender();
+							} catch (error) {
+								const message = error instanceof Error ? error.message : String(error);
+								ctx.ui.notify(`Could not update Zentui settings: ${message}`, "error");
+							}
+						},
+						() => close(undefined),
+					);
+					return integrationSettingsList;
+				};
 				const settingsList = new SettingsList(
 					buildItems(
 						deps.getConfig(),
 						deps.getActiveExtensionStatuses().size,
+						getActiveZentuiIntegrations().size,
 						makeThirdPartyStatusesSubmenu,
+						makeIntegrationWidgetsSubmenu,
 					),
 					5,
 					settingsListTheme,

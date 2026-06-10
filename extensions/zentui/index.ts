@@ -90,6 +90,7 @@ export default function (pi: ExtensionAPI) {
 						providerLabel: state.providerLabel,
 					}),
 					getThinkingLevel,
+					getActiveExtensionStatuses,
 				),
 		);
 	};

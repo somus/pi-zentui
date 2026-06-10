@@ -6,7 +6,8 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@earendil-works/pi-tui";
-import type { PolishedTuiConfig } from "./config";
+import { getExtensionStatusPlacement, type PolishedTuiConfig } from "./config";
+import { sanitizeExtensionStatusText } from "./extension-status";
 import { getZentuiSlot } from "./integrations";
 import {
 	EDITOR_ACCENT_FALLBACK,
@@ -34,6 +35,7 @@ export class PolishedEditor extends CustomEditor {
 	private readonly getModelMeta: () => EditorMeta;
 	private readonly getThinkingLevel: () => string | undefined;
 	private readonly getConfig: () => PolishedTuiConfig;
+	private readonly getExtensionStatuses: () => ReadonlyMap<string, string>;
 	private readonly uiTheme: Theme;
 	private readonly reset = "\x1b[0m";
 
@@ -45,6 +47,7 @@ export class PolishedEditor extends CustomEditor {
 		getConfig: () => PolishedTuiConfig,
 		getModelMeta: () => EditorMeta,
 		getThinkingLevel: () => string | undefined,
+		getExtensionStatuses: () => ReadonlyMap<string, string> = () => new Map(),
 	) {
 		super(tui, theme, keybindings, { paddingX: 0 });
 		this.borderColor = (text: string) => safeThemeFg(uiTheme, "border", text);
@@ -52,12 +55,22 @@ export class PolishedEditor extends CustomEditor {
 		this.getConfig = getConfig;
 		this.getModelMeta = getModelMeta;
 		this.getThinkingLevel = getThinkingLevel;
+		this.getExtensionStatuses = getExtensionStatuses;
 	}
 
 	private fillLine(content: string, width: number): string {
 		const truncated = truncateToWidth(content, Math.max(0, width), "");
 		const pad = " ".repeat(Math.max(0, width - visibleWidth(truncated)));
 		return `${truncated}${pad}`;
+	}
+
+	private editorRightStatus(config: PolishedTuiConfig): string | undefined {
+		for (const [key, value] of this.getExtensionStatuses()) {
+			if (getExtensionStatusPlacement(config, key) !== "editorRight") continue;
+			const text = sanitizeExtensionStatusText(value);
+			if (text) return text;
+		}
+		return undefined;
 	}
 
 	private editorThinkingStyle(config: PolishedTuiConfig, level: string): string | undefined {
@@ -137,6 +150,7 @@ export class PolishedEditor extends CustomEditor {
 		const extraText =
 			process.env.PI_ZENTUI_EDITOR_EXTRA_TEXT ??
 			config.editorExtraText ??
+			this.editorRightStatus(config) ??
 			(config.integrationSlots.editorRight ? getZentuiSlot("editorRight", config) : undefined);
 		const extraMeta = extraText
 			? renderStyleForSourceOrFallback(

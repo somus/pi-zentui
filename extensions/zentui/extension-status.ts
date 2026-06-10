@@ -13,6 +13,7 @@ export type ExtensionStatusSegmentsByPlacement = {
 	middle: ExtensionStatusSegment[];
 	right: ExtensionStatusSegment[];
 	contextLabel: ExtensionStatusSegment[];
+	editorRight: ExtensionStatusSegment[];
 };
 
 function compareKeys(a: ExtensionStatusSegment, b: ExtensionStatusSegment): number {
@@ -35,6 +36,7 @@ export function collectExtensionStatusSegments(
 		middle: [],
 		right: [],
 		contextLabel: [],
+		editorRight: [],
 	};
 
 	for (const [key, value] of statuses.entries()) {
@@ -51,5 +53,6 @@ export function collectExtensionStatusSegments(
 	segments.middle.sort(compareKeys);
 	segments.right.sort(compareKeys);
 	segments.contextLabel.sort(compareKeys);
+	segments.editorRight.sort(compareKeys);
 	return segments;
 }

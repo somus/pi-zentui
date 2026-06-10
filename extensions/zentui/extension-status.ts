@@ -19,12 +19,11 @@ function compareKeys(a: ExtensionStatusSegment, b: ExtensionStatusSegment): numb
 	return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
 }
 
-export function sanitizeExtensionStatusText(value: string): string {
-	return stripVTControlCharacters(value)
+export function sanitizeExtensionStatusText(value: string, preserveSpacing = false): string {
+	const stripped = stripVTControlCharacters(value)
 		.replace(/[\r\n\t\f\v]+/g, " ")
-		.replace(/[\u0000-\u001f\u007f-\u009f]/g, "")
-		.replace(/\s+/g, " ")
-		.trim();
+		.replace(/[\u0000-\u001f\u007f-\u009f]/g, "");
+	return preserveSpacing ? stripped.trim() : stripped.replace(/\s+/g, " ").trim();
 }
 
 export function collectExtensionStatusSegments(
@@ -42,7 +41,7 @@ export function collectExtensionStatusSegments(
 		const placement = getExtensionStatusPlacement(config, key);
 		if (placement === "off") continue;
 
-		const text = sanitizeExtensionStatusText(value);
+		const text = sanitizeExtensionStatusText(value, placement === "contextLabel");
 		if (!text) continue;
 
 		segments[placement].push({ key, text, placement });

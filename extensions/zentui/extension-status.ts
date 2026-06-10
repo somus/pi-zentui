@@ -23,7 +23,7 @@ export function sanitizeExtensionStatusText(value: string, preserveSpacing = fal
 	const stripped = stripVTControlCharacters(value)
 		.replace(/[\r\n\t\f\v]+/g, " ")
 		.replace(/[\u0000-\u001f\u007f-\u009f]/g, "");
-	return preserveSpacing ? stripped.trim() : stripped.replace(/\s+/g, " ").trim();
+	return preserveSpacing ? stripped.replace(/^\s+/, "") : stripped.replace(/\s+/g, " ").trim();
 }
 
 export function collectExtensionStatusSegments(

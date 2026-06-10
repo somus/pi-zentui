@@ -12,7 +12,7 @@ export type ColorSourcesConfig = {
 	userMessages: ColorSource;
 };
 
-export type ExtensionStatusPlacement = "off" | "left" | "middle" | "right";
+export type ExtensionStatusPlacement = "off" | "left" | "middle" | "right" | "contextLabel";
 
 export type ExtensionStatusesConfig = {
 	defaultPlacement: ExtensionStatusPlacement;
@@ -238,7 +238,13 @@ function normalizeColorSources(record: Record<string, unknown>): ColorSourcesCon
 }
 
 export function isExtensionStatusPlacement(value: unknown): value is ExtensionStatusPlacement {
-	return value === "off" || value === "left" || value === "middle" || value === "right";
+	return (
+		value === "off" ||
+		value === "left" ||
+		value === "middle" ||
+		value === "right" ||
+		value === "contextLabel"
+	);
 }
 
 function booleanValue(record: Record<string, unknown>, key: keyof IntegrationSlotsConfig): boolean {

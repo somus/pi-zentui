@@ -27,6 +27,7 @@ const extensionStatusPlacementValues: ExtensionStatusPlacement[] = [
 	"left",
 	"middle",
 	"right",
+	"contextLabel",
 ];
 const integrationWidgetPlacementValues: IntegrationWidgetPlacement[] = [
 	"off",

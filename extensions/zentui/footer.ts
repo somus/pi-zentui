@@ -210,20 +210,28 @@ export function installFooter(
 				);
 
 				const left = [cwdLabel, branchLabel, runtimeLabel].filter(Boolean).join(" ");
-				const contextLabel =
-					(config.integrationSlots.contextLabel ? getZentuiSlot("contextLabel", config) : undefined) ??
-					state.contextLabel;
-				const right = [
-					renderStyleForSource(theme, colorSource, contextColor, contextLabel),
-					renderStyleForSource(theme, colorSource, config.colors.tokens, state.tokenLabel),
-					renderStyleForSource(theme, colorSource, config.colors.cost, state.costLabel),
-				].join(separator);
 				const extensionStatuses = collectExtensionStatusSegments(
 					footerData.getExtensionStatuses(),
 					config,
 				);
 				const renderExtensionStatus = (text: string) =>
 					renderStyleForSource(theme, colorSource, config.colors.extensionStatus, text);
+				const contextStatus = extensionStatuses.contextLabel[0];
+				const contextLabel = contextStatus
+					? renderExtensionStatus(contextStatus.text)
+					: renderStyleForSource(
+							theme,
+							colorSource,
+							contextColor,
+							(config.integrationSlots.contextLabel
+								? getZentuiSlot("contextLabel", config)
+								: undefined) ?? state.contextLabel,
+						);
+				const right = [
+					contextLabel,
+					renderStyleForSource(theme, colorSource, config.colors.tokens, state.tokenLabel),
+					renderStyleForSource(theme, colorSource, config.colors.cost, state.costLabel),
+				].join(separator);
 				const content = composeFooterContent(
 					left,
 					right,

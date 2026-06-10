@@ -13,6 +13,7 @@ export type ExtensionStatusSegmentsByPlacement = {
 	middle: ExtensionStatusSegment[];
 	right: ExtensionStatusSegment[];
 	contextLabel: ExtensionStatusSegment[];
+	editorLeft: ExtensionStatusSegment[];
 	editorRight: ExtensionStatusSegment[];
 };
 
@@ -36,6 +37,7 @@ export function collectExtensionStatusSegments(
 		middle: [],
 		right: [],
 		contextLabel: [],
+		editorLeft: [],
 		editorRight: [],
 	};
 
@@ -53,6 +55,7 @@ export function collectExtensionStatusSegments(
 	segments.middle.sort(compareKeys);
 	segments.right.sort(compareKeys);
 	segments.contextLabel.sort(compareKeys);
+	segments.editorLeft.sort(compareKeys);
 	segments.editorRight.sort(compareKeys);
 	return segments;
 }

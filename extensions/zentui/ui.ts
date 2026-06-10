@@ -64,9 +64,9 @@ export class PolishedEditor extends CustomEditor {
 		return `${truncated}${pad}`;
 	}
 
-	private editorRightStatus(config: PolishedTuiConfig): string | undefined {
+	private editorStatus(config: PolishedTuiConfig, placement: "editorLeft" | "editorRight"): string | undefined {
 		for (const [key, value] of this.getExtensionStatuses()) {
-			if (getExtensionStatusPlacement(config, key) !== "editorRight") continue;
+			if (getExtensionStatusPlacement(config, key) !== placement) continue;
 			const text = sanitizeExtensionStatusText(value);
 			if (text) return text;
 		}
@@ -150,7 +150,7 @@ export class PolishedEditor extends CustomEditor {
 		const extraText =
 			process.env.PI_ZENTUI_EDITOR_EXTRA_TEXT ??
 			config.editorExtraText ??
-			this.editorRightStatus(config) ??
+			this.editorStatus(config, "editorRight") ??
 			(config.integrationSlots.editorRight ? getZentuiSlot("editorRight", config) : undefined);
 		const extraMeta = extraText
 			? renderStyleForSourceOrFallback(
@@ -170,6 +170,18 @@ export class PolishedEditor extends CustomEditor {
 					this.editorThinkingStyle(config, thinkingLevel),
 					"muted",
 					thinkingLevel,
+				),
+			);
+		}
+		const editorLeftStatus = this.editorStatus(config, "editorLeft");
+		if (editorLeftStatus) {
+			metaParts.push(
+				renderStyleForSourceOrFallback(
+					this.uiTheme,
+					colorSource,
+					config.colors.editorExtra,
+					"muted",
+					editorLeftStatus,
 				),
 			);
 		}

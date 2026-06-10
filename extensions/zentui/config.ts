@@ -12,7 +12,7 @@ export type ColorSourcesConfig = {
 	userMessages: ColorSource;
 };
 
-export type ExtensionStatusPlacement = "off" | "left" | "middle" | "right" | "contextLabel" | "editorRight";
+export type ExtensionStatusPlacement = "off" | "left" | "middle" | "right" | "contextLabel" | "editorLeft" | "editorRight";
 
 export type ExtensionStatusesConfig = {
 	defaultPlacement: ExtensionStatusPlacement;
@@ -244,6 +244,7 @@ export function isExtensionStatusPlacement(value: unknown): value is ExtensionSt
 		value === "middle" ||
 		value === "right" ||
 		value === "contextLabel" ||
+		value === "editorLeft" ||
 		value === "editorRight"
 	);
 }

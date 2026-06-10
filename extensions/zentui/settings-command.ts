@@ -28,6 +28,7 @@ const extensionStatusPlacementValues: ExtensionStatusPlacement[] = [
 	"middle",
 	"right",
 	"contextLabel",
+	"editorLeft",
 	"editorRight",
 ];
 const integrationWidgetPlacementValues: IntegrationWidgetPlacement[] = [
